@@ -1,4 +1,6 @@
 import prisma from '../../db/client';
+import { Prisma, BaseCurrency } from '@prisma/client';
+import { ENV } from '../../config/env';
 import { buildPositions } from '../../domain/portfolio/calc';
 import type { TxInput } from '../../domain/portfolio/types';
 
@@ -24,18 +26,16 @@ export async function ensureUserPortfolio(userId: string, portfolioId?: string) 
     return p;
   }
   const p = await prisma.portfolio.findFirst({ where: { userId }, orderBy: { createdAt: 'asc' } });
-  if (!p) {
-    const err = new Error('No portfolio for user') as Error & { status?: number };
-    err.status = 404;
-    throw err;
-  }
-  return p;
+  if (p) return p;
+  const base = (ENV.BASE_CURRENCY === 'USD' ? 'USD' : 'EUR') as BaseCurrency;
+  // Auto-create a default portfolio for the user
+  return prisma.portfolio.create({ data: { userId, baseCurrency: base } });
 }
 
 export async function listTransactions(filters: ListFilters) {
   const portfolio = await ensureUserPortfolio(filters.userId, filters.portfolioId);
 
-  const where: Parameters<typeof prisma.transaction.findMany>[0]['where'] = {
+  const where: Prisma.TransactionWhereInput = {
     portfolioId: portfolio.id,
   };
   if (filters.asset) where.asset = { symbol: filters.asset.toUpperCase() };
@@ -221,4 +221,3 @@ export async function getPortfolioPositions(userId: string, portfolioId?: string
 
   return buildPositions(inputs);
 }
-

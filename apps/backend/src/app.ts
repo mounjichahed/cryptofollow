@@ -14,11 +14,12 @@ export const createApp = () => {
   const app = express();
 
   app.use(helmet());
-  // Strict CORS: allow specific origins if configured; otherwise disable cross-origin
-  const allowedOrigins = ENV.CORS_ORIGIN?.split(',').map((s) => s.trim()).filter(Boolean);
+  // CORS: allow configured origins, or wildcard when '*' is set
+  const rawOrigins = ENV.CORS_ORIGIN?.split(',').map((s) => s.trim()).filter(Boolean) ?? [];
+  const allowAll = rawOrigins.includes('*');
   app.use(
     cors({
-      origin: allowedOrigins && allowedOrigins.length > 0 ? allowedOrigins : false,
+      origin: allowAll ? true : (rawOrigins.length > 0 ? rawOrigins : false),
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization'],
     }),

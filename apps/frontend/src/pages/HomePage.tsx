@@ -5,9 +5,12 @@ import PieChartCard from '../components/PieChartCard';
 import { useState } from 'react';
 
 type PortfolioSummary = {
+  portfolioId: string;
+  baseCurrency: 'EUR' | 'USD';
   totalValue: number;
   totalUnrealizedPnl: number;
   totalRealizedPnl: number;
+  totalCost: number;
   positions: {
     asset: string;
     symbol: string;
@@ -15,14 +18,24 @@ type PortfolioSummary = {
     avgCost: number;
     marketPrice: number | null;
     value: number | null;
+    invested: number;
     unrealizedPnl: number | null;
     unrealizedPnlPct: number | null;
+    realizedPnl: number;
   }[];
 };
 
 function numberFmt(n: number | null | undefined, opts: Intl.NumberFormatOptions = {}) {
   if (n == null || Number.isNaN(n)) return 'N/A';
   return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2, ...opts }).format(n);
+}
+function numberQty(n: number | null | undefined) {
+  if (n == null || Number.isNaN(n)) return 'N/A';
+  return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 8 }).format(n);
+}
+function moneyFmt(n: number | null | undefined, currency: 'EUR' | 'USD' = 'EUR') {
+  if (n == null || Number.isNaN(n)) return 'N/A';
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency, maximumFractionDigits: 2 }).format(n);
 }
 
 export default function HomePage() {
@@ -64,10 +77,11 @@ export default function HomePage() {
 
       {data && (
         <>
-          <header className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <SummaryCard label="Valeur totale" value={numberFmt(data.totalValue)} />
-            <SummaryCard label="PnL latent" value={numberFmt(data.totalUnrealizedPnl)} />
-            <SummaryCard label="PnL réalisé" value={numberFmt(data.totalRealizedPnl)} />
+          <header className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <SummaryCard label="Investi" value={moneyFmt(data.totalCost, data.baseCurrency)} />
+            <SummaryCard label="Possédé" value={moneyFmt(data.totalValue, data.baseCurrency)} />
+            <SummaryCard label="Gain d'investissement" value={moneyFmt(data.totalUnrealizedPnl, data.baseCurrency)} />
+            <SummaryCard label="Bénéfice de vente" value={moneyFmt(data.totalRealizedPnl, data.baseCurrency)} />
           </header>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -76,18 +90,19 @@ export default function HomePage() {
                 keyField="symbol"
                 columns={[
                   { key: 'symbol', header: 'Actif' },
-                  { key: 'quantity', header: 'Quantité', render: (r) => numberFmt(r.quantity) },
-                  { key: 'avgCost', header: 'Prix moyen', render: (r) => numberFmt(r.avgCost) },
+                  { key: 'quantity', header: 'Quantité', render: (r) => numberQty(r.quantity) },
+                  { key: 'avgCost', header: 'Prix unitaire (moyen)', render: (r) => moneyFmt(r.avgCost, data.baseCurrency) },
                   {
                     key: 'marketPrice',
-                    header: 'Prix actuel',
-                    render: (r) => numberFmt(r.marketPrice ?? null),
+                    header: 'Prix actuel (unitaire)',
+                    render: (r) => moneyFmt(r.marketPrice ?? null, data.baseCurrency),
                   },
-                  { key: 'value', header: 'Valeur', render: (r) => numberFmt(r.value ?? null) },
+                  { key: 'invested', header: 'Investi', render: (r) => moneyFmt(r.invested, data.baseCurrency) },
+                  { key: 'value', header: 'Valeur', render: (r) => moneyFmt(r.value ?? null, data.baseCurrency) },
                   {
                     key: 'unrealizedPnl',
-                    header: 'PnL',
-                    render: (r) => numberFmt(r.unrealizedPnl ?? null),
+                    header: "Gain d'investissement",
+                    render: (r) => moneyFmt(r.unrealizedPnl ?? null, data.baseCurrency),
                   },
                   {
                     key: 'unrealizedPnlPct',
@@ -97,6 +112,7 @@ export default function HomePage() {
                         ? 'N/A'
                         : `${numberFmt(r.unrealizedPnlPct, { maximumFractionDigits: 2 })}%`,
                   },
+                  { key: 'realizedPnl', header: 'Bénéfice de vente', render: (r) => moneyFmt(r.realizedPnl, data.baseCurrency) },
                 ]}
                 data={data.positions}
               />

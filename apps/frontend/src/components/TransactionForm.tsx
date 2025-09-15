@@ -1,4 +1,4 @@
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useAssets, useCreateTransaction, useDefaultPortfolioId } from '../hooks/useTransactions';
 
 function nowLocal() {
@@ -23,12 +23,19 @@ export default function TransactionForm() {
   const [quantity, setQuantity] = useState<string>('');
   const [price, setPrice] = useState<string>('');
   const [fee, setFee] = useState<string>('0');
-  const [currency, setCurrency] = useState<string>('EUR');
+  const [currency, setCurrency] = useState<string>('USD');
   const [tradedAt, setTradedAt] = useState<string>(nowLocal());
   const [note, setNote] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
 
   const resolvedPortfolioId = useMemo(() => portfolioId || defaultPid || null, [portfolioId, defaultPid]);
+
+  // Auto-fill portfolio id when detected
+  useEffect(() => {
+    if (!portfolioId && defaultPid) {
+      setPortfolioId(defaultPid);
+    }
+  }, [defaultPid, portfolioId]);
 
   function validate(): string | null {
     if (!asset) return 'Actif requis';
@@ -40,7 +47,7 @@ export default function TransactionForm() {
     if (!Number.isFinite(f) || f < 0) return 'Frais invalide';
     if (!currency) return 'Devise requise';
     if (!tradedAt) return 'Date requise';
-    if (!resolvedPortfolioId) return 'Portfolio introuvable. Renseignez un portfolioId.';
+    if (!resolvedPortfolioId) return 'Aucun portefeuille détecté.';
     return null;
   }
 
@@ -72,10 +79,6 @@ export default function TransactionForm() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         <div>
-          <label className="block text-xs text-gray-500">Portfolio ID (auto si dispo)</label>
-          <input className="w-full px-3 py-2 rounded border bg-white dark:bg-gray-800" value={portfolioId} onChange={(e) => setPortfolioId(e.target.value)} placeholder={defaultPid ?? ''} />
-        </div>
-        <div>
           <label className="block text-xs text-gray-500">Actif</label>
           <select className="w-full px-3 py-2 rounded border bg-white dark:bg-gray-800" value={asset} onChange={(e) => setAsset(e.target.value)}>
             {(assets.data ?? []).map((a) => (
@@ -99,7 +102,7 @@ export default function TransactionForm() {
         </div>
         <div>
           <label className="block text-xs text-gray-500">Quantité</label>
-          <input className="w-full px-3 py-2 rounded border bg-white dark:bg-gray-800" type="number" step="any" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
+          <input className="w-full px-3 py-2 rounded border bg-white dark:bg-gray-800" type="number" step="0.00000001" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
         </div>
         <div>
           <label className="block text-xs text-gray-500">Prix</label>
@@ -111,7 +114,11 @@ export default function TransactionForm() {
         </div>
         <div>
           <label className="block text-xs text-gray-500">Devise</label>
-          <input className="w-full px-3 py-2 rounded border bg-white dark:bg-gray-800" value={currency} onChange={(e) => setCurrency(e.target.value)} />
+          <select className="w-full px-3 py-2 rounded border bg-white dark:bg-gray-800" value={currency} onChange={(e) => setCurrency(e.target.value)}>
+            <option value="EUR">EUR</option>
+            <option value="USD">USD</option>
+            <option value="USDT">USDT</option>
+          </select>
         </div>
         <div>
           <label className="block text-xs text-gray-500">Date</label>

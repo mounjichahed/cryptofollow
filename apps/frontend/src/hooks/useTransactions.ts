@@ -23,6 +23,7 @@ export type TransactionsResponse = {
 };
 
 export type ListFilters = {
+  portfolioId?: string;
   asset?: string;
   type?: 'BUY' | 'SELL' | '';
   from?: string; // ISO
@@ -34,6 +35,7 @@ export type ListFilters = {
 export function useTransactions(filters: ListFilters) {
   const params = useMemo(() => {
     const p: Record<string, string | number> = {};
+    if (filters.portfolioId) p.portfolioId = filters.portfolioId;
     if (filters.asset) p.asset = filters.asset;
     if (filters.type) p.type = filters.type;
     if (filters.from) p.from = filters.from;
@@ -66,13 +68,11 @@ export function useDefaultPortfolioId() {
     queryKey: ['defaultPortfolioId'],
     queryFn: async () => {
       try {
-        const res = await api.get<TransactionsResponse>('/api/transactions', { params: { size: 1 } });
-        const id = res.data.items[0]?.portfolioId as string | undefined;
-        if (id) return id;
+        const res = await api.get<{ portfolioId: string }>('/api/portfolio');
+        return res.data.portfolioId ?? null;
       } catch {
-        // ignore
+        return null as string | null;
       }
-      return null as string | null;
     },
     staleTime: 60_000,
   });
@@ -115,6 +115,21 @@ export function useCreateTransaction() {
         qc.invalidateQueries({ queryKey: ['transactions'] }),
         qc.invalidateQueries({ queryKey: ['portfolio'] }),
         qc.invalidateQueries({ queryKey: ['assets'] }),
+      ]);
+    },
+  });
+}
+
+export function useDeleteTransaction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await api.delete(`/api/transactions/${id}`);
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ['transactions'] }),
+        qc.invalidateQueries({ queryKey: ['portfolio'] }),
       ]);
     },
   });

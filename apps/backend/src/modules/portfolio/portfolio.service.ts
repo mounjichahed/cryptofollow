@@ -9,14 +9,19 @@ export type PortfolioPositionView = {
   avgCost: number;
   marketPrice: number | null;
   value: number | null;
+  invested: number; // avgCost * quantity
   unrealizedPnl: number | null;
   unrealizedPnlPct: number | null;
+  realizedPnl: number; // realized PnL from historical sells
 };
 
 export type PortfolioSummary = {
+  portfolioId: string;
+  baseCurrency: 'EUR' | 'USD';
   totalValue: number;
   totalUnrealizedPnl: number;
   totalRealizedPnl: number;
+  totalCost: number;
   positions: PortfolioPositionView[];
 };
 
@@ -41,6 +46,7 @@ export async function getPortfolioSummaryService(userId: string, portfolioId?: s
   let totalValue = 0;
   let totalUnrealizedPnl = 0;
   let totalRealizedPnl = 0;
+  let totalCost = 0;
 
   for (const sym of symbols) {
     const pos = positionsMap[sym];
@@ -49,6 +55,7 @@ export async function getPortfolioSummaryService(userId: string, portfolioId?: s
 
     const marketPrice = priceMap[sym] ?? null;
     const value = marketPrice != null ? marketPrice * pos.quantityNet : null;
+    const invested = pos.avgCost * pos.quantityNet;
     const unrealizedPnl =
       marketPrice != null ? (marketPrice - pos.avgCost) * pos.quantityNet : null;
     const unrealizedPnlPct =
@@ -57,6 +64,7 @@ export async function getPortfolioSummaryService(userId: string, portfolioId?: s
         : null;
 
     if (value != null) totalValue += value;
+    totalCost += invested;
     if (unrealizedPnl != null) totalUnrealizedPnl += unrealizedPnl;
 
     positions.push({
@@ -66,18 +74,22 @@ export async function getPortfolioSummaryService(userId: string, portfolioId?: s
       avgCost: pos.avgCost,
       marketPrice,
       value,
+      invested,
       unrealizedPnl,
       unrealizedPnlPct,
+      realizedPnl: pos.realizedPnl,
     });
   }
 
   const summary: PortfolioSummary = {
+    portfolioId: portfolio.id,
+    baseCurrency,
     totalValue,
     totalUnrealizedPnl,
     totalRealizedPnl,
+    totalCost,
     positions,
   };
 
   return summary;
 }
-

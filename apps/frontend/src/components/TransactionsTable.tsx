@@ -1,15 +1,28 @@
 import { useMemo, useState } from 'react';
-import { useTransactions, useAssets } from '../hooks/useTransactions';
+import { useTransactions, useAssets, useDefaultPortfolioId } from '../hooks/useTransactions';
 import Table from './Table';
+import { useDeleteTransaction } from '../hooks/useTransactions';
 
 function toIso(dtLocal: string | undefined) {
   if (!dtLocal) return undefined;
   const d = new Date(dtLocal);
   return d.toISOString();
 }
+function qtyFmt(n: number) {
+  return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 8 }).format(n);
+}
+function moneyByCurrency(n: number, currency: string) {
+  if (currency === 'EUR' || currency === 'USD') {
+    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency, maximumFractionDigits: 2 }).format(n);
+  }
+  // Fallback for non-ISO currencies like USDT
+  return `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(n)} ${currency}`;
+}
 
 export default function TransactionsTable() {
   const assetsQuery = useAssets();
+  const { data: defaultPid } = useDefaultPortfolioId();
+  const del = useDeleteTransaction();
   const [asset, setAsset] = useState<string>('');
   const [type, setType] = useState<'' | 'BUY' | 'SELL'>('');
   const [from, setFrom] = useState<string>('');
@@ -17,7 +30,7 @@ export default function TransactionsTable() {
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(20);
 
-  const query = useTransactions({ asset: asset || undefined, type: type || undefined, from: toIso(from), to: toIso(to), page, size });
+  const query = useTransactions({ portfolioId: defaultPid ?? undefined, asset: asset || undefined, type: type || undefined, from: toIso(from), to: toIso(to), page, size });
 
   const totalPages = useMemo(() => Math.max(1, Math.ceil((query.data?.total ?? 0) / size)), [query.data?.total, size]);
 
@@ -70,11 +83,20 @@ export default function TransactionsTable() {
           { key: 'tradedAt', header: 'Date', render: (r: any) => new Date(r.tradedAt).toLocaleString() },
           { key: 'asset', header: 'Actif' },
           { key: 'type', header: 'Type' },
-          { key: 'quantity', header: 'Quantité' },
-          { key: 'price', header: 'Prix' },
-          { key: 'fee', header: 'Frais' },
+          { key: 'quantity', header: 'Quantité', render: (r: any) => qtyFmt(r.quantity) },
+          { key: 'price', header: 'Prix unitaire', render: (r: any) => moneyByCurrency(r.price, r.currency) },
+          { key: 'fee', header: 'Frais', render: (r: any) => moneyByCurrency(r.fee, r.currency) },
           { key: 'currency', header: 'Devise' },
           { key: 'note', header: 'Note' },
+          { key: 'actions', header: '', render: (r: any) => (
+            <button
+              className="px-2 py-1 rounded bg-red-600 text-white disabled:opacity-50"
+              onClick={() => { if (confirm('Supprimer cette transaction ?')) del.mutate(r.id); }}
+              disabled={del.isPending}
+            >
+              Supprimer
+            </button>
+          ) },
         ]}
         data={query.data?.items ?? []}
       />

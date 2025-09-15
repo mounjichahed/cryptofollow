@@ -1,5 +1,7 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // Ensure Prisma uses OpenSSL 3 binary for Alpine (musl)
+  binaryTargets = ["linux-musl-openssl-3.0.x", "native"]
 }
 
 datasource db {
@@ -69,4 +71,3 @@ model Price {
   source    String
   createdAt DateTime @default(now())
 }
-

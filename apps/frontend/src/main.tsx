@@ -7,6 +7,7 @@ import HomePage from './pages/HomePage';
 import TransactionsPage from './pages/TransactionsPage';
 import LoginPage from './pages/LoginPage';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import RequireAuth from './components/RequireAuth';
 
 const queryClient = new QueryClient();
 
@@ -16,9 +17,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <BrowserRouter>
         <Routes>
           <Route element={<App />}>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/transactions" element={<TransactionsPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/" element={<RequireAuth><HomePage /></RequireAuth>} />
+            <Route path="/transactions" element={<RequireAuth><TransactionsPage /></RequireAuth>} />
           </Route>
         </Routes>
       </BrowserRouter>
