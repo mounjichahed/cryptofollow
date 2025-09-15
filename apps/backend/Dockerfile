@@ -12,7 +12,8 @@ COPY . .
 # Install runtime libs (OpenSSL 3) for Prisma library engine on Alpine
 RUN apk add --no-cache openssl
 
-RUN npm ci
+# Use npm install to update lock if workspace deps changed
+RUN npm install --no-audit --no-fund
 RUN npx prisma generate
 RUN npm run -w apps/backend build
 

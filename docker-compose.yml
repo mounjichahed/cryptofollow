@@ -33,8 +33,6 @@ services:
     build:
       context: .
       dockerfile: apps/frontend/Dockerfile
-      args:
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:${PORT:-3000}}
     environment:
       NODE_ENV: production
     ports:

@@ -8,6 +8,8 @@ import pricesRouter from './services/prices/prices.routes';
 import transactionsRouter from './modules/transactions/transactions.routes';
 import portfolioRouter from './modules/portfolio/portfolio.routes';
 import assetsRouter from './modules/assets/assets.routes';
+import notificationsRouter from './modules/notifications/notifications.routes';
+import alertsRouter from './modules/alerts/alerts.routes';
 import { ENV } from './config/env';
 
 export const createApp = () => {
@@ -39,6 +41,8 @@ export const createApp = () => {
   app.use('/api/transactions', transactionsRouter);
   app.use('/api/portfolio', portfolioRouter);
   app.use('/api/assets', assetsRouter);
+  app.use('/api/notifications', notificationsRouter);
+  app.use('/api/alerts', alertsRouter);
 
   // Error handler should be last
   app.use(errorHandler);

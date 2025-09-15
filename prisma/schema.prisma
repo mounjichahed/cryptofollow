@@ -25,6 +25,8 @@ model User {
   passwordHash String
   createdAt    DateTime    @default(now())
   portfolios   Portfolio[]
+  alerts       Alert[]
+  pushSubs     PushSubscription[]
 }
 
 model Portfolio {
@@ -43,6 +45,7 @@ model Asset {
   coingeckoId  String        @unique
   transactions Transaction[]
   prices       Price[]
+  alerts       Alert[]
 }
 
 model Transaction {
@@ -69,5 +72,34 @@ model Price {
   price     Decimal
   fetchedAt DateTime
   source    String
+  createdAt DateTime @default(now())
+}
+
+enum AlertCondition {
+  ABOVE
+  BELOW
+}
+
+model Alert {
+  id              String          @id @default(cuid())
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+  asset           Asset           @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  assetId         String
+  condition       AlertCondition
+  threshold       Decimal
+  currency        String
+  enabled         Boolean         @default(true)
+  lastTriggeredAt DateTime?
+  createdAt       DateTime        @default(now())
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
   createdAt DateTime @default(now())
 }

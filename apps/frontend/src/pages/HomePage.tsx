@@ -89,20 +89,22 @@ export default function HomePage() {
               <Table
                 keyField="symbol"
                 columns={[
-                  { key: 'symbol', header: 'Actif' },
-                  { key: 'quantity', header: 'Quantité', render: (r) => numberQty(r.quantity) },
-                  { key: 'avgCost', header: 'Prix unitaire (moyen)', render: (r) => moneyFmt(r.avgCost, data.baseCurrency) },
+                  { key: 'symbol', header: 'Actif', sortAccessor: (r) => r.symbol },
+                  { key: 'quantity', header: 'Quantité', render: (r) => numberQty(r.quantity), sortAccessor: (r) => r.quantity },
+                  { key: 'avgCost', header: 'Prix unitaire (moyen)', render: (r) => moneyFmt(r.avgCost, data.baseCurrency), sortAccessor: (r) => r.avgCost },
                   {
                     key: 'marketPrice',
                     header: 'Prix actuel (unitaire)',
                     render: (r) => moneyFmt(r.marketPrice ?? null, data.baseCurrency),
+                    sortAccessor: (r) => r.marketPrice ?? null,
                   },
-                  { key: 'invested', header: 'Investi', render: (r) => moneyFmt(r.invested, data.baseCurrency) },
-                  { key: 'value', header: 'Valeur', render: (r) => moneyFmt(r.value ?? null, data.baseCurrency) },
+                  { key: 'invested', header: 'Investi', render: (r) => moneyFmt(r.invested, data.baseCurrency), sortAccessor: (r) => r.invested },
+                  { key: 'value', header: 'Valeur', render: (r) => moneyFmt(r.value ?? null, data.baseCurrency), sortAccessor: (r) => r.value ?? null },
                   {
                     key: 'unrealizedPnl',
                     header: "Gain d'investissement",
                     render: (r) => moneyFmt(r.unrealizedPnl ?? null, data.baseCurrency),
+                    sortAccessor: (r) => r.unrealizedPnl ?? null,
                   },
                   {
                     key: 'unrealizedPnlPct',
@@ -111,8 +113,9 @@ export default function HomePage() {
                       r.unrealizedPnlPct == null
                         ? 'N/A'
                         : `${numberFmt(r.unrealizedPnlPct, { maximumFractionDigits: 2 })}%`,
+                    sortAccessor: (r) => r.unrealizedPnlPct ?? null,
                   },
-                  { key: 'realizedPnl', header: 'Bénéfice de vente', render: (r) => moneyFmt(r.realizedPnl, data.baseCurrency) },
+                  { key: 'realizedPnl', header: 'Bénéfice de vente', render: (r) => moneyFmt(r.realizedPnl, data.baseCurrency), sortAccessor: (r) => r.realizedPnl },
                 ]}
                 data={data.positions}
               />

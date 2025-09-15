@@ -24,7 +24,10 @@ ENV NODE_ENV=production
 # Copy built app and tooling (keep dev deps for vite preview)
 COPY --from=builder /app /app
 
+# Entrypoint to enable TLS when env vars are provided
+COPY apps/frontend/entrypoint.sh ./apps/frontend/entrypoint.sh
+RUN chmod +x ./apps/frontend/entrypoint.sh
+
 EXPOSE 5173
 
-CMD ["npm", "run", "-w", "apps/frontend", "preview", "--", "--host", "0.0.0.0", "--port", "5173"]
-
+CMD ["sh", "-c", "./apps/frontend/entrypoint.sh"]

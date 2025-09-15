@@ -31,6 +31,9 @@ function Navbar() {
           <NavLink to="/transactions" className={linkClass}>
             Transactions
           </NavLink>
+          <NavLink to="/alerts" className={linkClass}>
+            Alertes
+          </NavLink>
           {!isAuthenticated ? (
             <NavLink to="/login" className={linkClass}>
               Login
