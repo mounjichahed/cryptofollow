@@ -11,7 +11,15 @@
     "dev:frontend": "npm run -w apps/frontend dev",
     "dev": "npm -ws run dev",
     "format": "prettier --write .",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "db:seed": "npm --workspace apps/backend run db:seed",
+    "db:migrate": "npm run prisma:migrate",
+    "compose:up": "docker-compose up -d --build",
+    "compose:down": "docker-compose down -v"
+  },
+  "devDependencies": {
+    "prisma": "^5.16.1"
   }
 }
-
